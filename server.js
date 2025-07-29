@@ -1,13 +1,16 @@
 const express = require('express');
 const app = express();
-const PORT = 3000;
-
 const db = require('./database');
 
+// Use environment PORT or fallback to 5000
+const PORT = process.env.PORT || 5000;
+
+// Middleware
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// GET all submissions
 app.get('/submissions', (req, res) => {
   db.all('SELECT * FROM contacts ORDER BY rowid DESC', (err, rows) => {
     if (err) {
@@ -105,36 +108,32 @@ app.get('/submissions', (req, res) => {
   });
 });
 
-
+// POST route to handle form submission
 app.post('/submit', (req, res) => {
-    const { name, email, message } = req.body;
+  const { name, email, message } = req.body;
 
-    const sql = `INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)`;
+  const sql = `INSERT INTO contacts (name, email, message) VALUES (?, ?, ?)`;
 
-    db.run(sql, [name, email, message], function(err) {
-        if (err) {
-            console.error('❌ DB Insert Error:', err.message);
-            return res.status(500).json({ success: false, error: 'DB error' });
-        }
+  db.run(sql, [name, email, message], function(err) {
+    if (err) {
+      console.error('❌ DB Insert Error:', err.message);
+      return res.status(500).json({ success: false, error: 'DB error' });
+    }
 
-
-        res.status(200).json({
-            success: true,
-            data: {
-                id: this.lastID,
-                name,
-                email,
-                message,
-                created_at: new Date().toISOString()
-            }
-        });
+    res.status(200).json({
+      success: true,
+      data: {
+        id: this.lastID,
+        name,
+        email,
+        message,
+        created_at: new Date().toISOString()
+      }
     });
+  });
 });
 
-
-
-
-
+// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
